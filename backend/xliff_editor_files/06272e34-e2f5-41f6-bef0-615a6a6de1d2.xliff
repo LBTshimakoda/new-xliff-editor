@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file original="sample.html" source-language="en" target-language="es" datatype="html">
+    <body>
+      <trans-unit id="1">
+        <source>Welcome to our <g id="1">website</g>!</source>
+        <target state="translated">¡Bienvenido a nuestro <g id="1">sitio web</g>!</target>
+        <note>Greeting message on homepage</note>
+      </trans-unit>
+      <trans-unit id="2">
+        <source>Click <x id="1"/>here<x id="2"/> to continue.</source>
+        <target state="needs-review">Haga clic <x id="1"/>aquí<x id="2"/> para continuar.</target>
+      </trans-unit>
+      <trans-unit id="3">
+        <source>The <g id="1">user profile</g> has been updated successfully.</source>
+        <target>El <g id="1">perfil de usuario</g> se ha actualizado correctamente.</target>
+      </trans-unit>
+      <trans-unit id="4">
+        <source>Please enter your <g id="1">email address</g> below.</source>
+        <note>Form field instruction</note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

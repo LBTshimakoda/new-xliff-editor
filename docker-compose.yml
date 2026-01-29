@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # PostgreSQL for workflow state and data
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: workflow_db
+      POSTGRES_USER: workflow_user
+      POSTGRES_PASSWORD: workflow_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Redis for caching and real-time updates
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+  # RabbitMQ for message bus (simpler than Azure Service Bus for local)
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"  # Management UI at http://localhost:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  # Adminer for database UI
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:

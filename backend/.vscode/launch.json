@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: XLIFF Editor API",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/xliff_editor_api.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "args": []
+    }
+}

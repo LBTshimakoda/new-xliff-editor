@@ -1,0 +1,41 @@
+{
+  "default": {
+    "name": "default",
+    "description": "Default Translation Memory",
+    "path": "./tm_databases/default.db",
+    "owner": "admin",
+    "access_type": "public",
+    "created_at": "2025-01-15T10:00:00",
+    "created_by": "admin",
+    "allowed_users": [
+      "admin"
+    ],
+    "allowed_projects": [],
+    "stats": {
+      "total_entries": 1250,
+      "last_used": "2025-12-17T18:17:51.416691"
+    }
+  },
+  "client_acme": {
+    "name": "client_acme",
+    "description": "ACME Corp Translation Memory",
+    "path": "./tm_databases/client_acme.db",
+    "owner": "project_manager",
+    "access_type": "shared",
+    "created_at": "2025-01-10T09:00:00",
+    "created_by": "project_manager",
+    "allowed_users": [
+      "project_manager",
+      "translator1",
+      "translator2"
+    ],
+    "allowed_projects": [
+      "acme_website",
+      "acme_docs"
+    ],
+    "stats": {
+      "total_entries": 5430,
+      "last_used": "2025-01-15T16:45:00"
+    }
+  }
+}

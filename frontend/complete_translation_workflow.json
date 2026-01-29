@@ -1,0 +1,58 @@
+{
+  "name": "Complete XLZ Translation Pipeline",
+  "description": "Extract → Translate with Ollama → Validate → Export",
+  "stages": [
+    {
+      "name": "extract",
+      "type": "custom",
+      "config": {
+        "plugin": "xliff_extract",
+        "handler": "extract",
+        "source_language": "en",
+        "target_languages": ["es"]
+      },
+      "dependencies": [],
+      "position": {"x": 100, "y": 200}
+    },
+    {
+      "name": "ollama_translate",
+      "type": "custom",
+      "config": {
+        "plugin": "xliff_ollama_mt",
+        "handler": "translate",
+        "model": "llama3",
+        "source_language": "English",
+        "target_language": "Spanish",
+        "temperature": 0.3,
+        "max_concurrent": 5,
+        "skip_pretranslated": false
+      },
+      "dependencies": ["extract"],
+      "position": {"x": 400, "y": 200}
+    },
+    {
+      "name": "validate",
+      "type": "custom",
+      "config": {
+        "plugin": "xliff_validate",
+        "handler": "validate",
+        "check_tags": true,
+        "check_placeholders": true
+      },
+      "dependencies": ["ollama_translate"],
+      "position": {"x": 700, "y": 200}
+    },
+    {
+      "name": "export",
+      "type": "custom",
+      "config": {
+        "plugin": "xliff_export",
+        "handler": "export",
+        "format": "xliff_1.2",
+        "include_metadata": true
+      },
+      "dependencies": ["validate"],
+      "position": {"x": 1000, "y": 200}
+    }
+  ]
+}

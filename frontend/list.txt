@@ -1,0 +1,15 @@
+.gitignore
+index.html
+install.bat
+install.sh
+list.txt
+node_modules
+package-lock.json
+package.json
+postcss.config.js
+README.md
+src
+tailwind.config.js
+tsconfig.json
+tsconfig.node.json
+vite.config.ts

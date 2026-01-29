@@ -1,0 +1,40 @@
+{
+  "name": "Test Ollama Translation",
+  "description": "Simple translation test",
+  "stages": [
+    {
+      "name": "extract",
+      "type": "custom",
+      "config": {
+        "plugin": "xliff_extract",
+        "handler": "extract",
+        "source_language": "en",
+        "target_languages": ["es"]
+      },
+      "dependencies": [],
+      "position": {
+        "x": 100,
+        "y": 200
+      }
+    },
+    {
+      "name": "ollama_translate",
+      "type": "custom",
+      "config": {
+        "plugin": "xliff_ollama_mt",
+        "handler": "translate",
+        "model": "llama3",
+        "source_language": "English",
+        "target_language": "Spanish",
+        "temperature": 0.3,
+        "max_concurrent": 3,
+        "skip_pretranslated": true
+      },
+      "dependencies": ["extract"],
+      "position": {
+        "x": 400,
+        "y": 200
+      }
+    }
+  ]
+}
