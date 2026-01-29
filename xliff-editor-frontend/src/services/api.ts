@@ -169,6 +169,19 @@ class EditorAPI {
   }
 
   /**
+   * Download translated file (returns response for custom handling)
+   */
+  async downloadTranslatedFile(sessionId: string): Promise<any> {
+    const response = await axios.get(
+      `${API_BASE_URL}/sessions/${sessionId}/download`,
+      {
+        responseType: 'blob',
+      }
+    );
+    return response;
+  }
+
+  /**
    * Close editing session
    */
   async closeSession(sessionId: string): Promise<void> {
