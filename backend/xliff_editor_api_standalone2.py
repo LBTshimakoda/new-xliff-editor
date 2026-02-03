@@ -779,78 +779,120 @@ async def search_translation_memory(
             detail=f"TM search failed: {str(e)}"
         )
 
-@app.post("/api/editor/tm/import/{session_id}", tags=["Translation Memory"])
-async def import_to_tm(
-    session_id: str = PathParam(..., description="Session ID to import from"),
-    overwrite: bool = Body(False, description="Overwrite existing TM entries")
-):
-    """
-    ## Import Existing Translations to TM
+# ============================================================================
+# TRANSLATION MEMORY DATABASE
+# ============================================================================
+
+import sqlite3
+from difflib import SequenceMatcher
+
+# Initialize TM database
+def init_tm_database():
+    """Initialize Translation Memory SQLite database"""
+    conn = sqlite3.connect('tm_database.db')
+    cursor = conn.cursor()
     
-    Import all segments with existing translations from current file to TM database.
-    Useful for:
-    - Adding translations from previously translated files
-    - Building TM from existing work
-    - Populating TM with reference materials
-    
-    **Example:**
-    ```json
-    {
-      "overwrite": false
-    }
-    ```
-    
-    Returns count of imported entries.
-    """
-    try:
-        if session_id not in editor_sessions:
-            raise HTTPException(status_code=404, detail="Session not found")
-        
-        session = editor_sessions[session_id]
-        imported_count = 0
-        skipped_count = 0
-        
-        # Import all segments with non-empty targets
-        for segment in session.segments:
-            source_text = segment.get("source", "").strip()
-            target_text = segment.get("target", "").strip()
-            
-            if source_text and target_text:
-                # Check if already exists
-                conn = sqlite3.connect(TM_DATABASE)
-                cursor = conn.cursor()
-                
-                cursor.execute("""
-                    SELECT id FROM tm_entries
-                    WHERE source_text = ? AND source_lang = ? AND target_lang = ?
-                """, (source_text, session.source_language, session.target_language))
-                
-                existing = cursor.fetchone()
-                conn.close()
-                
-                if existing and not overwrite:
-                    skipped_count += 1
-                else:
-                    add_to_tm(source_text, target_text, session.source_language, session.target_language)
-                    imported_count += 1
-        
-        print(f"📥 TM Import: {imported_count} entries imported, {skipped_count} skipped")
-        
-        return {
-            "success": True,
-            "imported": imported_count,
-            "skipped": skipped_count,
-            "total": imported_count + skipped_count,
-            "message": f"Successfully imported {imported_count} translations to TM"
-        }
-        
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(
-            status_code=500,
-            detail=f"TM import failed: {str(e)}"
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS translation_memory (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            source_text TEXT NOT NULL,
+            target_text TEXT NOT NULL,
+            source_lang TEXT NOT NULL,
+            target_lang TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            usage_count INTEGER DEFAULT 1
         )
+    ''')
+    
+    # Create index for faster lookups
+    cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_source_lang 
+        ON translation_memory(source_text, source_lang, target_lang)
+    ''')
+    
+    conn.commit()
+    conn.close()
+    print("✅ TM Database initialized")
+
+def add_to_tm(source_text: str, target_text: str, source_lang: str, target_lang: str):
+    """Add or update translation in TM database"""
+    if not source_text.strip() or not target_text.strip():
+        return
+    
+    conn = sqlite3.connect('tm_database.db')
+    cursor = conn.cursor()
+    
+    # Check if exact match exists
+    cursor.execute('''
+        SELECT id, usage_count FROM translation_memory 
+        WHERE source_text = ? AND source_lang = ? AND target_lang = ?
+    ''', (source_text, source_lang, target_lang))
+    
+    existing = cursor.fetchone()
+    
+    if existing:
+        # Update existing entry
+        cursor.execute('''
+            UPDATE translation_memory 
+            SET target_text = ?, last_used = CURRENT_TIMESTAMP, usage_count = ?
+            WHERE id = ?
+        ''', (target_text, existing[1] + 1, existing[0]))
+    else:
+        # Insert new entry
+        cursor.execute('''
+            INSERT INTO translation_memory 
+            (source_text, target_text, source_lang, target_lang)
+            VALUES (?, ?, ?, ?)
+        ''', (source_text, target_text, source_lang, target_lang))
+    
+    conn.commit()
+    conn.close()
+
+def get_tm_matches(source_text: str, source_lang: str, target_lang: str, min_match: int = 70) -> list:
+    """Get TM matches with fuzzy matching"""
+    if not source_text.strip():
+        return []
+    
+    conn = sqlite3.connect('tm_database.db')
+    cursor = conn.cursor()
+    
+    # Get all entries for this language pair
+    cursor.execute('''
+        SELECT source_text, target_text, usage_count, last_used
+        FROM translation_memory 
+        WHERE source_lang = ? AND target_lang = ?
+        ORDER BY usage_count DESC, last_used DESC
+        LIMIT 100
+    ''', (source_lang, target_lang))
+    
+    entries = cursor.fetchall()
+    conn.close()
+    
+    matches = []
+    
+    for entry in entries:
+        db_source, db_target, usage_count, last_used = entry
+        
+        # Calculate similarity (0-100%)
+        similarity = SequenceMatcher(None, source_text.lower(), db_source.lower()).ratio() * 100
+        
+        if similarity >= min_match:
+            matches.append({
+                'source': db_source,
+                'target': db_target,
+                'match': round(similarity, 1),
+                'origin': f'TM (used {usage_count}x)',
+                'last_used': last_used
+            })
+    
+    # Sort by match percentage (highest first)
+    matches.sort(key=lambda x: x['match'], reverse=True)
+    
+    return matches[:10]  # Return top 10 matches
+
+# Initialize TM database on startup
+init_tm_database()
 
 # ============================================================================
 # HELPER FUNCTIONS

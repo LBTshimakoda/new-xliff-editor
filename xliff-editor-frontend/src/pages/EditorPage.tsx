@@ -50,6 +50,8 @@ const EditorPage: React.FC = () => {
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [saveAsVisible, setSaveAsVisible] = useState(false);
   const [saveAsFilename, setSaveAsFilename] = useState('');
+  const [tmInsertedText, setTmInsertedText] = useState<string | null>(null);
+  const [tmRefreshTrigger, setTmRefreshTrigger] = useState(0);
 
   // Fetch session info
   const { data: session, isLoading: sessionLoading } = useQuery({
@@ -113,6 +115,9 @@ const EditorPage: React.FC = () => {
       // Update cache
       queryClient.invalidateQueries({ queryKey: ['segments', sessionId] });
       queryClient.invalidateQueries({ queryKey: ['session', sessionId] });
+
+      // Refresh TM panel to show newly saved translation
+      setTmRefreshTrigger(prev => prev + 1);
 
       if (data.warnings.length > 0) {
         message.warning({
@@ -430,6 +435,8 @@ const EditorPage: React.FC = () => {
                 saving={updateMutation.isPending}
                 sourceLang={sourceLanguage}
                 targetLang={targetLanguage}
+                tmInsertedText={tmInsertedText}
+                onTmTextUsed={() => setTmInsertedText(null)}
               />
             )}
 
@@ -453,8 +460,12 @@ const EditorPage: React.FC = () => {
             <TMPanel 
               segment={currentSegment} 
               sessionId={sessionId!}
+              sourceLang={sourceLanguage}
+              targetLang={targetLanguage}
+              refreshTrigger={tmRefreshTrigger}
               onInsert={(text) => {
-                // This will be handled by SegmentEditor
+                // Store the inserted text so SegmentEditor can use it
+                setTmInsertedText(text);
                 message.success('TM match inserted');
               }}
             />

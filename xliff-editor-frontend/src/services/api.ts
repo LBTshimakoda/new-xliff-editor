@@ -216,6 +216,58 @@ class EditorAPI {
     );
     return response.data;
   }
+
+  /**
+   * Search Translation Memory for matches
+   */
+  async searchTM(
+    sourceText: string,
+    sourceLang: string,
+    targetLang: string,
+    minMatch: number = 70,
+    limit: number = 5
+  ): Promise<{
+    matches: Array<{
+      source: string;
+      target: string;
+      match: number;
+      origin: string;
+      usage_count: number;
+    }>;
+    count: number;
+  }> {
+    const response = await axios.post(
+      `${API_BASE_URL}/tm/search`,
+      {
+        source_text: sourceText,
+        source_lang: sourceLang,
+        target_lang: targetLang,
+        min_match: minMatch,
+        limit: limit,
+      }
+    );
+    return response.data;
+  }
+
+  /**
+   * Import all existing translations from session to TM
+   */
+  async importToTM(
+    sessionId: string,
+    overwrite: boolean = false
+  ): Promise<{
+    success: boolean;
+    imported: number;
+    skipped: number;
+    total: number;
+    message: string;
+  }> {
+    const response = await axios.post(
+      `${API_BASE_URL}/tm/import/${sessionId}`,
+      { overwrite }
+    );
+    return response.data;
+  }
 }
 
 export const editorAPI = new EditorAPI();

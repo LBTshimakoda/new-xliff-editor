@@ -19,6 +19,8 @@ interface SegmentEditorProps {
   saving?: boolean;
   sourceLang?: string;
   targetLang?: string;
+  tmInsertedText?: string | null;
+  onTmTextUsed?: () => void;
 }
 
 const SegmentEditor: React.FC<SegmentEditorProps> = ({
@@ -29,6 +31,8 @@ const SegmentEditor: React.FC<SegmentEditorProps> = ({
   saving = false,
   sourceLang = 'EN',
   targetLang = 'ES',
+  tmInsertedText = null,
+  onTmTextUsed,
 }) => {
   const [target, setTarget] = useState(segment.target || '');
   const [hasChanges, setHasChanges] = useState(false);
@@ -41,6 +45,16 @@ const SegmentEditor: React.FC<SegmentEditorProps> = ({
     setTarget(segment.target || '');
     setHasChanges(false);
   }, [segment.id]);
+
+  // Handle TM inserted text
+  useEffect(() => {
+    if (tmInsertedText) {
+      setTarget(tmInsertedText);
+      setHasChanges(true);
+      targetInputRef.current?.focus();
+      onTmTextUsed?.();
+    }
+  }, [tmInsertedText, onTmTextUsed]);
 
   // Focus target input
   useEffect(() => {
